@@ -1,11 +1,12 @@
 import express from "express";
 import { authRoutes } from "./authRoutes/index.js";
+import { testRouter } from "./testRoutes/index.js";
 
 const router = express.Router();
 
 // User routes
 router.use("/auth", authRoutes);
-// router.use("/tests", testRoutes);
+router.use("/tests", testRouter);
 // router.use("/questions", questionRoutes);
 // router.use("/payments", paymentRoutes);
 // router.use("/results", resultRoutes);

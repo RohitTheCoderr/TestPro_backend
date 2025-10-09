@@ -5,12 +5,9 @@ import { otpModel } from "../../models/otpModel.js";
 
 export const generateOtpmiddleware = async (req, res, next) => {
   try {
-
     const email = req.body?.email;
     const mobile = req.body?.mobile;
 
-    console.log("genotp", email, mobile);
-    
     if (!mobile && !email) {
       return res.status(400).json({
         success: false,
@@ -49,16 +46,11 @@ export const generateOtpmiddleware = async (req, res, next) => {
       result = await SmsOtp(mobile, "WHATSAPP");
     }
 
-    console.log("otp result", result);
-    
-
     if (result?.success) {
       const otpID = result?.message?.startsWith("Otp")
         ? result?.message
         : false;
 
-        console.log("otpID", otpID);
-        
       if (mailOtp && email) {
         let expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 10);
@@ -90,9 +82,6 @@ export async function otpVerification(req, res, next) {
     const mobile = req.body?.mobile;
     const email = req.body?.email;
 
-
-    console.log("data", otp, otpID, mobile, email);
-    
     if (!mobile && !email && !otp) {
       return res.status(400).json({
         success: false,
@@ -114,13 +103,11 @@ export async function otpVerification(req, res, next) {
       if (!otpID) {
         return res
           .status(400)
-          .json({ success: false, message: "pls provide otpID" , data:{}});
+          .json({ success: false, message: "pls provide otpID", data: {} });
       }
-      result =await VerifySmsOtp(mobile, otpID, otp);
+      result = await VerifySmsOtp(mobile, otpID, otp);
     }
 
-    console.log("result varified", result);
-    
     if (result?.success) {
       delete req.body.otp;
       delete req.body.otpID;

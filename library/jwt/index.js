@@ -10,22 +10,18 @@ const ExprireIn = process.env.JWT_EXPIRES_IN;
     throw new Error("ExprireIn or secratekey not found in env");
   }
 
-
   const option = { expiresIn: ExprireIn };
   const payload = { userId: id };
-  console.log("payload option", payload, option);
   
   try {
     const token = jwt.sign(payload, secratekey, option);
-    console.log("after sign token in jwt library", token);
-    
     return token;
   } catch (error) {
     throw new Error("Token generation failed");
   }
 }
 
-export function verifyjwttoken(token) {
+export function verifyToken(token) {
   const secratekey = process.env.JWT_SECRET;
   if (!secratekey) {
     throw new Error("secretkey is not found in env while token verification");

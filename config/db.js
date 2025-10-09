@@ -2,9 +2,12 @@ import mongoose, { mongo } from "mongoose";
 import userModel from "../models/User.js"
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, {
+  dbName: process.env.DB_NAME,
+});
       // Sync indexes for userModel (ensures sparse unique indexes are applied)
     await userModel.syncIndexes();
+    
     console.log("User indexes synced");
 
     console.log("database connected successfully");

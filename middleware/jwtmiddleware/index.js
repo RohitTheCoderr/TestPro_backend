@@ -1,12 +1,11 @@
 import jwt from "jsonwebtoken";
-import { getitngjwttoken, verifyjwttoken } from "../../library/jwt/index.js";
+
+import userModel from "../../models/User.js";
+import { getitngjwttoken, verifyToken } from "../../library/jwt/index.js";
 
 export const createJwttoken = (req, res, next) => {
   try {
     const userId = req.userId;
-
-    console.log("while token middleware", userId);
-    
 
     if (!userId) {
       return res
@@ -14,13 +13,7 @@ export const createJwttoken = (req, res, next) => {
         .json({ success: false, message: "UserId not found" });
     }
 
-    console.log(" after conditon!userId", userId);
-    
-
     const token = getitngjwttoken(userId); // jwt token gen need
-
-console.log("after token gene", token);
-
 
     return res.status(202).json({
       success: true,
@@ -32,12 +25,12 @@ console.log("after token gene", token);
   }
 };
 
-export const varifyJwtToken = () => {
+export const varifyJwtToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      const decodetoken = verifyjwttoken(token);
+      const decodetoken = verifyToken(token);
       req.userId = decodetoken.userId;
 
       if (req.userId) {
@@ -58,4 +51,17 @@ export const varifyJwtToken = () => {
         message: "something went wrong faild to verified token",
       });
   }
+};
+
+
+
+export const verifyAdmin = async (req, res, next) => {
+  varifyJwtToken(req, res, async () => {
+    const user = await userModel.findById(req.userId);
+    if (user && user.role === "admin") {
+      next();
+    } else {
+      res.status(403).json({ message: "Access denied! Admins only." });
+    }
+  });
 };

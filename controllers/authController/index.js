@@ -17,30 +17,18 @@ export async function isUserExits(req, res, next) {
   try {
     const { mobile, email } = req.body;
 
-    console.log("data exit", mobile, email);
-
     let exits;
     if (mobile) {
-      console.log("findmodel", mobile);
-
       exits = await userModel.findOne({ mobile });
-
-      console.log("aftercheckmodel", exits);
     } else if (email) {
       exits = await userModel.findOne({ email });
     }
 
-    console.log("exits", exits);
-
     if (req.originalUrl === "/api/user/auth/send_opt") {
-      console.log("check", exits);
-
       if (exits)
         return res
           .status(400)
           .json({ success: false, message: "user already Exits" });
-
-      console.log("before next");
 
       next();
     } else if (req.originalUrl == "/api/user/auth/forget_password") {
@@ -50,8 +38,6 @@ export async function isUserExits(req, res, next) {
         .status(400)
         .json({ success: false, message: "user not found" });
     }
-
-    console.log("not read if else");
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -61,17 +47,15 @@ export const registerUser = async (req, res, next) => {
   try {
     const userdata = req.body;
 
-    console.log("after otp varified userdata", userdata);
     // userdata?.name
 
     if (!userdata?.email && !userdata?.password && !userdata?.mobile) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        message: "please provide name, email or mobile and password",
+        message: "Please provide email or mobile and password",
       });
     }
 
-    console.log("after otp varified and condition userdata", userdata);
     let userExists;
 
     if (userdata?.email) {
@@ -82,40 +66,60 @@ export const registerUser = async (req, res, next) => {
       userExists = await userModel.findOne({ mobile: userdata?.mobile });
     }
 
-    console.log("userExists", userExists);
-
-    if (userExists)
-      return res
-        .status(400)
-        .json({ success: false, message: "User already exists", data: {} });
-
-    console.log("before hashed pass", userdata);
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
 
     userdata.password = await createHashedPassword(userdata?.password);
 
-    console.log("after hashed pass", userdata);
+    let role = "student";
 
-    const user = await userModel.create(userdata);
+    // ✅ Check if email/mobile matches admin list in .env
+    const adminEmails =
+      process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ||
+      [];
+    const adminPhones =
+      `+91${process.env.ADMIN_PHONES?.split(",").map((p) => p.trim()) || []}`
 
-    if (user._id) {
-      req.userId = user._id;
-      console.log("after created user model user", user);
+    if (
+      (userdata?.email && adminEmails.includes(userdata.email.toLowerCase())) ||
+      (userdata?.mobile && adminPhones.includes(userdata.mobile))
+    ) {
+      role = "admin";
+    }
 
+    const newUser = await userModel.create({
+      name: userdata?.name || "Student",
+      email: userdata?.email,
+      mobile: userdata?.mobile,
+      password: userdata?.password,
+      role,
+    });
+
+    if (newUser._id) {
+      req.userId = newUser._id;
       return next();
     } else {
       res
         .status(500)
-        .json({ success: false, message: "User not registered", data: {} });
+        .json({
+          success: false,
+          message: "User not registered. Please try again.",
+        });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: error.message || "Server error" });
   }
 };
 
 export const loginUser = async (req, res, next) => {
   try {
     const reqData = req.body;
-
     let user;
     if (reqData?.email) {
       user = await userModel.findOne({ email: reqData.email });
@@ -124,15 +128,6 @@ export const loginUser = async (req, res, next) => {
     if (reqData?.mobile) {
       user = await userModel.findOne({ mobile: reqData.mobile });
     }
-
-    // let user;
-    // if (reqData?.email) {
-    //   user = await userModel.findById(reqData?.email);
-    // }
-
-    // if (reqData?.mobile) {
-    //   user = await userModel.findById(reqData?.mobile);
-    // }
 
     if (!user)
       return res
@@ -147,16 +142,6 @@ export const loginUser = async (req, res, next) => {
     } else {
       return res.status(400).json({ message: "invalid email or password" });
     }
-
-    // const createToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    //   expiresIn: "1d",
-    // });
-
-    // res.status(200).json({
-    //   message: "Logged In successful",
-    //   token: createToken,
-    //   data: user,
-    // });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
