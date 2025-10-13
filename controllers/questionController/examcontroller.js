@@ -2,9 +2,6 @@ import categorymodel from "../../models/examModel/categorymodel.js";
 import Exammodel from "../../models/examModel/Exammodel.js";
 // import ExamTest from "../models/Test.js";
 
-
-
-
 // GET /api/category/:slug/exams
 export const getExamsByCategoryController = async (req, res) => {
   try {
@@ -16,7 +13,7 @@ export const getExamsByCategoryController = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Category not found" });
 
-    const exams = await Exammodel.find({ category: category._id });
+    const exams = await Exammodel.find({ categoryID: category._id });
     res.json({ success: true, data: { category, exams } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -25,21 +22,26 @@ export const getExamsByCategoryController = async (req, res) => {
 
 export const createExamBycategory = async (req, res, next) => {
   try {
-    const { categoryId, name, slug, examDetails } = req.body;
+    const { categoryID, name, slug, examDetails } = req.body;
 
-    if (!categoryId || !name || !slug || !examDetails)
+    if (!categoryID || !name || !slug || !examDetails)
       return res.status(400).json({
         success: false,
         message: "categoryId, name, examDetails and slug required",
       });
 
-    const category = await categorymodel.findById(categoryId);
+    const category = await categorymodel.findById(categoryID);
     if (!category)
       return res
         .status(404)
         .json({ success: false, message: "Category not found" });
 
-    const exam = await Exammodel.create({ name, slug, category: category._id , examDetails });
+    const exam = await Exammodel.create({
+      name,
+      slug,
+      categoryID: category.categoryID,
+      examDetails,
+    });
 
     res.status(201).json({
       success: true,
@@ -50,8 +52,6 @@ export const createExamBycategory = async (req, res, next) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
 
 // for exam details
 // export const getExamDetails = async (req, res) => {
@@ -65,5 +65,3 @@ export const createExamBycategory = async (req, res, next) => {
 //     res.status(500).json({ success: false, message: error.message });
 //   }
 // };
-
-

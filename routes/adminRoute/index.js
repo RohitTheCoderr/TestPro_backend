@@ -10,7 +10,7 @@ router.post("/category/create", createCategory);
 router.post("/exam/create", createExamBycategory);
 router.post("/test/create", createTest);
 router.patch(
-  "/test/:testId/subjects/:subjectId/questions/:questionId/image",
+  "/test/:testID/subjects/:subjectID/questions/:questionID/image",
   upload.single("image"),
   updateQuestionImage
 );

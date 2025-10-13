@@ -1,21 +1,21 @@
 // import Exammodel from "../../models/examModel/Exammodel.js";
 import testmodel from "../../models/examModel/textModel.js";
-
+import mongoose from "mongoose";
 // import TestModel from "../models/Test.js";
 
 // Create a new test (Admin only)
 export const createTest = async (req, res) => {
   try {
-    const { examId, title, type, duration, price, subjects } = req.body;
+    const { examID, title, type, duration, price, subjects } = req.body;
 
-    if (!examId || !title || !subjects || subjects.length === 0) {
+    if (!examID || !title || !subjects || subjects.length === 0) {
       return res
         .status(400)
         .json({ success: false, message: "Missing required fields" });
     }
 
     const test = await testmodel.create({
-      exam: examId,
+      examID,
       title,
       type,
       duration,
@@ -31,10 +31,9 @@ export const createTest = async (req, res) => {
   }
 };
 
-
 export const updateQuestionImage = async (req, res) => {
   try {
-    const { testId, subjectId, questionId } = req.params;
+    const { testID, subjectID, questionID } = req.params;
 
     // 1️⃣ check if file uploaded via Cloudinary
     const imageUrl = req.file?.path;
@@ -46,7 +45,7 @@ export const updateQuestionImage = async (req, res) => {
     }
 
     // 2️⃣ find test
-    const test = await testmodel.findById(testId);
+    const test = await testmodel.findById(testID);
     if (!test) {
       return res.status(404).json({
         success: false,
@@ -55,7 +54,7 @@ export const updateQuestionImage = async (req, res) => {
     }
 
     // 3️⃣ find subject by id
-    const subject = test.subjects.id(subjectId);
+    const subject = test.subjects.id(subjectID);
     if (!subject) {
       return res.status(404).json({
         success: false,
@@ -64,14 +63,13 @@ export const updateQuestionImage = async (req, res) => {
     }
 
     // 4️⃣ find question by id
-    const question = subject.questions.id(questionId);
+    const question = subject.questions.id(questionID);
     if (!question) {
       return res.status(404).json({
         success: false,
         message: "Question not found",
       });
     }
-
     // 5️⃣ update image
     question.image = imageUrl;
 
@@ -91,15 +89,14 @@ export const updateQuestionImage = async (req, res) => {
   }
 };
 
-
 // Get all tests for an exam
 export const getAllTestsByExam = async (req, res) => {
   try {
-    const { examId } = req.params;
+    const { examID } = req.params;
 
     const tests = await testmodel
-      .find({ exam: examId })
-      .select("exam title type duration price");
+      .find({ examID })
+      .select(" title type duration price examID testID"); // which
 
     res.json({ success: true, tests });
   } catch (error) {
@@ -108,11 +105,16 @@ export const getAllTestsByExam = async (req, res) => {
 };
 
 // Get a single test by title
-export const getTestByTitle = async (req, res) => {
+export const getTestById = async (req, res) => {
   try {
-    const { examId, testTitle } = req.params;
+    const { examID, testID } = req.params;
 
-    const test = await testmodel.findOne({ exam: examId, title: testTitle });
+    const test = await testmodel.findOne({
+      examID: new mongoose.Types.ObjectId(examID),
+      testID: new mongoose.Types.ObjectId(testID),
+    });
+    // const test = await testmodel.findOne({ examID, testID });
+
     if (!test)
       return res
         .status(404)
@@ -123,61 +125,3 @@ export const getTestByTitle = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-// export const getSingleTest = async (req, res) => {
-//   try {
-//     const { examId, subjectName, testTitle } = req.params;
-
-//     const examTest = await testmodel.findOne({ exam: examId });
-//     if (!examTest) return res.status(404).json({ message: "Exam not found" });
-
-//     const subject = examTest.subjects.find(
-//       s => s.name.toLowerCase() === subjectName.toLowerCase()
-//     );
-//     if (!subject) return res.status(404).json({ message: "Subject not found" });
-
-//     const test = subject.tests.find(
-//       t => t.title.toLowerCase() === testTitle.toLowerCase()
-//     );
-//     if (!test) return res.status(404).json({ message: "Test not found" });
-
-//     res.json({ success: true, test });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
-// export const uploadTestController = async (req, res) => {
-//   try {
-//     const { examId, subjects } = req.body;
-
-//      if (!examId || !subjects || subjects.length === 0) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Exam ID and subjects are required.",
-//       });
-//     }
-//      // ✅ Check if exam exists
-//     const examExists = await Exammodel.findById(examId);
-//     if (!examExists) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Exam not found. Please select a valid exam.",
-//       });
-//     }
-//   // ✅ Create Test document
-//     const newTest = await testmodel.create({
-//       exam: examId,
-//       subjects,
-//     });
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Test created successfully.",
-//       data: newTest,
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };

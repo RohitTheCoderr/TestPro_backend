@@ -12,9 +12,20 @@ const examDetails = new mongoose.Schema({
 });
 
 const ExamSchema = new mongoose.Schema({
-  category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
+  categoryID: { type: Schema.Types.ObjectId, ref: "Category", required: true },
   name: String, // "CGL, MTS"  // human readable
   slug: String, // e.g. "cgl, mts" // for machine readable
   examDetails: examDetails,
-});
+},{
+    toJSON: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        ret.ExamID = ret._id;
+        delete ret._id;
+        delete ret.__v;
+      },
+    },
+  }
+
+);
 export default mongoose.model("Exam", ExamSchema);
