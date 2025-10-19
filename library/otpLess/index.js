@@ -50,8 +50,6 @@ export const VerifySmsOtp = async (mobile, orderId, otp) => {
   let otpExpTime = process.env.OTPLESS_EXPIRY_TIME || "";
   let otpLength = process.env.OTPLESS_LENGTH || "";
   try {
-    console.log("vrief", clientId, secretId, otpExpTime, otpLength);
-
     if (!clientId || !secretId || !otpExpTime || !otpLength) {
       console.log(
         "OTPLESS_CLIENT_ID OR OTPLESS_CLIENT_SECRET OR OTPLESS_EXPIRY_TIME OR OTPLESS_LENGTH may not in .env"
@@ -77,14 +75,11 @@ export const VerifySmsOtp = async (mobile, orderId, otp) => {
       otpLength // must match the one you used while sending
     );
 
-    console.log("isValidotp", isValidotp);
-
     if (isValidotp && Object.keys(isValidotp).length) {
       if (!isValidotp.isOTPVerified) {
         return { success: false, message: "Invalid OTP" };
       }
     }
-    console.log("isValidotp after", isValidotp);
 
     return { success: true, message: "OTP verified" };
   } catch (error) {

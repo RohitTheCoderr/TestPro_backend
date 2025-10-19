@@ -6,7 +6,6 @@ import categorymodel from "../../models/examModel/categorymodel.js";
 export const getcategoryController = async (req, res) => {
   try {
     const categories = await categorymodel.find();
-
     if (categories) {
       res.status(200).json({
         success: true,
@@ -33,7 +32,11 @@ export const createCategory = async (req, res, next) => {
       });
     }
     // Create Test
-    const category = await categorymodel.create({ name, slug, categoryDetails });
+    const category = await categorymodel.create({
+      name,
+      slug,
+      categoryDetails,
+    });
     res.status(201).json({
       success: true,
       message: "category upload successfuly",

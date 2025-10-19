@@ -54,7 +54,6 @@ export const varifyJwtToken = (req, res, next) => {
 };
 
 
-
 export const verifyAdmin = async (req, res, next) => {
   varifyJwtToken(req, res, async () => {
     const user = await userModel.findById(req.userId);

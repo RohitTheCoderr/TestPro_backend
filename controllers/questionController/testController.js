@@ -1,4 +1,5 @@
 // import Exammodel from "../../models/examModel/Exammodel.js";
+import AttemptSchema from "../../models/AttemptSchema.js";
 import testmodel from "../../models/examModel/textModel.js";
 import mongoose from "mongoose";
 // import TestModel from "../models/Test.js";
@@ -98,7 +99,11 @@ export const getAllTestsByExam = async (req, res) => {
       .find({ examID })
       .select(" title type duration price examID testID"); // which
 
-    res.json({ success: true, tests });
+    res.status(201).json({
+      success: true,
+      message: "tests details send successfuly",
+      tests,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -108,7 +113,6 @@ export const getAllTestsByExam = async (req, res) => {
 export const getTestById = async (req, res) => {
   try {
     const { examID, testID } = req.params;
-
     const test = await testmodel.findOne({
       examID: new mongoose.Types.ObjectId(examID),
       testID: new mongoose.Types.ObjectId(testID),
@@ -120,8 +124,62 @@ export const getTestById = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Test not found" });
 
-    res.json({ success: true, test });
+    res
+      .status(201)
+      .json({ success: true, message: "test send successfuly", test });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const submitTest = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { testID, answers = [] } = req.body;
+
+    if (!testID) {
+      res
+        .status(401)
+        .json({ success: false, message: "testID not provided from frontend" });
+    }
+
+    const test = await testmodel.findById(testID);
+
+    let score = 0;
+    answers.forEach((element) => {
+      // Find the subject by ID
+      const subject = test.subjects.find(
+        (sub) => sub._id.toString() === element.subjectId
+      );
+      if (!subject) return;
+
+      // Now questions is an array, so use .find
+      const question = subject.questions.find(
+        (q) => q._id.toString() === element.questionId
+      );
+      if (!question) return;
+
+      // Compare answer
+      if (question.answer === element.selectedOptionIndex) {
+        score += 1;
+      }
+    });
+
+    const Attempt = new AttemptSchema({
+      userId,
+      testID,
+      answers,
+      score,
+      submitedAt: new Date(),
+    });
+
+    await Attempt.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Test submitted successfully", score });
+  } catch (error) {
+    console.error("Submit test failed:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
