@@ -32,6 +32,8 @@ export const varifyJwtToken = (req, res, next) => {
       const token = authHeader.split(" ")[1];
       const decodetoken = verifyToken(token);
       req.userId = decodetoken.userId;
+      console.log("hhhhh");
+      
 
       if (req.userId) {
         return next();
