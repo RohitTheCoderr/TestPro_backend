@@ -82,7 +82,7 @@ export async function otpVerification(req, res, next) {
     const mobile = req.body?.mobile;
     const email = req.body?.email;
 
-    if (!mobile && !email && !otp) {
+    if (!otp || (!mobile && !email)) {
       return res.status(400).json({
         success: false,
         message: "pls provide mobile or email or otp",
@@ -92,7 +92,7 @@ export async function otpVerification(req, res, next) {
     let result;
 
     if (email) {
-      const check = otpModel.findOne({ email }, { mailOtp: 1 });
+      const check = await otpModel.findOne({ email }, { mailOtp: 1 });
       if (check?.mailOtp == otp) {
         result = { success: true, message: "OTP verified", data: {} };
         await otpModel.findOneAndDelete({ email });

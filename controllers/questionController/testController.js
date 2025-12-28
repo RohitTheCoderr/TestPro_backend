@@ -216,8 +216,6 @@ export const submitTest = async (req, res) => {
 export const testsResult = async (req, res) => {
   try {
     const userId = req.userId;
-    console.log("helo get result");
-
     if (!userId) {
       return res
         .status(401)
