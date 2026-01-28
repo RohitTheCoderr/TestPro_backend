@@ -55,9 +55,14 @@ export const varifyJwtToken = (req, res, next) => {
 
 
 export const verifyAdmin = async (req, res, next) => {
+  
   varifyJwtToken(req, res, async () => {
     const user = await userModel.findById(req.userId);
+    console.log("hello", user);
+    
     if (user && user.role === "admin") {
+console.log("next funxction");
+
       next();
     } else {
       res.status(403).json({ message: "Access denied! Admins only." });

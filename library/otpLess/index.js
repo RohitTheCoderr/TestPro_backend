@@ -7,6 +7,7 @@ export const SmsOtp = async (mobile, channel) => {
   let otpExpTime = process.env.OTPLESS_EXPIRY_TIME || "";
   let otpLength = process.env.OTPLESS_LENGTH || "";
 
+  
   try {
     console.log("env", clientId, secretId, otpExpTime, otpLength);
 

@@ -8,6 +8,8 @@ export const generateOtpmiddleware = async (req, res, next) => {
     const email = req.body?.email;
     const mobile = req.body?.mobile;
 
+    console.log("email is here", email);
+    
     if (!mobile && !email) {
       return res.status(400).json({
         success: false,
@@ -45,6 +47,9 @@ export const generateOtpmiddleware = async (req, res, next) => {
       // result = await SmsOtp(mobile, "SMS");  // I use free services so sms not active
       result = await SmsOtp(mobile, "WHATSAPP");
     }
+
+console.log(":resulkt", result);
+
 
     if (result?.success) {
       const otpID = result?.message?.startsWith("Otp")
