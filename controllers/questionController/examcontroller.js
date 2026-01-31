@@ -5,9 +5,9 @@ import Exammodel from "../../models/examModel/Exammodel.js";
 // GET /api/category/:slug/exams
 export const getExamsByCategoryController = async (req, res) => {
   try {
-    const { slug } = req.params;
+    const { categoryID } = req.params;
 
-    const category = await categorymodel.findOne({ slug });
+    const category = await categorymodel.findById(categoryID );
     if (!category)
       return res
         .status(404)
