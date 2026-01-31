@@ -10,7 +10,11 @@ const CategorySchema = new mongoose.Schema(
     name: { type: String }, //SSC, BANKING, RAILWAY
     slug: { type: String }, // ssc, banking, railway
     categoryDetails: categoryDetails,
+<<<<<<< HEAD
     status:{type:Boolean}
+=======
+    status:{type: Boolean, default: true,}
+>>>>>>> 5798fa4c2897be4d65e26ca3669bbb2db751537e
   },
   {
     toJSON: {
