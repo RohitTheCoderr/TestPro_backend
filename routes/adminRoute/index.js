@@ -1,12 +1,13 @@
 import express from "express";
-import { createCategory } from "../../controllers/questionController/categorycontroller.js";
+import { createCategory, updateCategory } from "../../controllers/questionController/categorycontroller.js";
 import { createExamBycategory } from "../../controllers/questionController/examcontroller.js";
 import { createTest, updateQuestionImage } from "../../controllers/questionController/testController.js";
 import { upload } from "../../config/cloudinaryConfig.js";
 
 const router = express.Router();
-
+// category
 router.post("/category/create", createCategory);
+router.post("/category/update", updateCategory);
 router.post("/exam/create", createExamBycategory);
 router.post("/test/create", createTest);
 router.patch(

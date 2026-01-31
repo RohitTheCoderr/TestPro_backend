@@ -8,14 +8,10 @@ const router = express.Router();
 router.get("/hello", hello);  // for testing only
 
 router.post("/send_opt", isUserExits, generateOtpmiddleware);
+router.post("/forget_password", isUserExits, generateOtpmiddleware);
 
 router.post("/register", otpVerification, registerUser, createJwttoken);
 
 router.post("/login", loginUser, createJwttoken);
-
-// router.post("/forget_password", loginUser);
-
-// router.post("/create_profile", loginUser);
-// router.post("/update_profile", loginUser);
 
 export {router as authRoutes};
