@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import userModel from "../../models/User.js";
 import { getitngjwttoken, verifyToken } from "../../library/jwt/index.js";
 
-export const createJwttoken = (req, res, next) => {
+export const createJwttoken = async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -13,12 +13,24 @@ export const createJwttoken = (req, res, next) => {
         .json({ success: false, message: "UserId not found" });
     }
 
+
     const token = getitngjwttoken(userId); // jwt token gen need
+
+    if (!token) {
+  return res.status(500).json({
+    success: false,
+    message: "Failed to generate token",
+  });
+}
+    
+   const user = await userModel
+  .findById(userId)
+  .select("-password -__v");
 
     return res.status(202).json({
       success: true,
       message: "Token generatedd successfully",
-      data: { token },
+      data: { token, user },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -58,11 +70,7 @@ export const verifyAdmin = async (req, res, next) => {
   
   varifyJwtToken(req, res, async () => {
     const user = await userModel.findById(req.userId);
-    console.log("hello", user);
-    
     if (user && user.role === "admin") {
-console.log("next funxction");
-
       next();
     } else {
       res.status(403).json({ message: "Access denied! Admins only." });

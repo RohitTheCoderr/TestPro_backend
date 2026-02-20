@@ -9,6 +9,7 @@ const QuestionSchema = new Schema(
     answer: { type: Number, required: true }, // correct option index
     details: { type: String },
     image: { type: String, default: null }, // ✅ Image URL (e.g. from Cloudinary)
+    isImage:{type:Boolean, default: false}
   },
   {
     toJSON: {
@@ -45,10 +46,12 @@ const TestSchema = new Schema(
   {
     examID: { type: Schema.Types.ObjectId, ref: "Exam", required: true },
     title: { type: String, required: true }, // Test 1, Test 2
+    test_type:{type:String, required: true }, // mock/ previous year/ practice
     type: { type: String, enum: ["free", "paid"], default: "free" },
     duration: { type: Number, default: 60 }, // in minutes
     price: { type: Number, default: 0 },
     subjects: [SubjectSchema],
+    status:{type: Boolean, default: true,}
   },
   {
     timestamps: true, // ✅ move this here instead of third arg

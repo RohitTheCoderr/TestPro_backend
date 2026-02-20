@@ -8,17 +8,59 @@ import mongoose from "mongoose";
 // Create a new test (Admin only)
 export const createTest = async (req, res) => {
   try {
-    const { examID, title, type, duration, price, subjects } = req.body;
 
+    const payload=req.body
+
+    if (Array.isArray(payload)) {
+      if (payload.length===0) {
+        return res.status(400).json({success:false, message:"Empty test list"})
+      }
+
+      for(const test of payload){
+        if (!test.examID || !test.testID || !test.subjects?.length) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid test data in bulk payload",
+          });
+        }
+      }
+
+      const tests=await testmodel.insertMany(payload, {ordered:false} // continue even if one questions fails
+        )
+
+         return res.status(201).json({
+        success: true,
+        message: "Tests created successfully",
+        count: tests.length,
+        tests,
+      });
+    }
+
+
+    const { examID, title, test_type, type, duration, price, subjects } = payload;
+
+    console.log("payload", payload);
+    
     if (!examID || !title || !subjects || subjects.length === 0) {
       return res
         .status(400)
         .json({ success: false, message: "Missing required fields" });
     }
 
+
+
+        const isExitExam = await Exammodel.findById(examID);
+        
+        if (!isExitExam){
+          return res
+            .status(404)
+            .json({ success: false, message: "Exam category not found" });}
+
+    
     const test = await testmodel.create({
       examID,
       title,
+      test_type,
       type,
       duration,
       price,
@@ -115,10 +157,9 @@ export const getTestById = async (req, res) => {
   try {
     const { examID, testID } = req.params;
     const test = await testmodel.findOne({
-      examID: new mongoose.Types.ObjectId(examID),
-      testID: new mongoose.Types.ObjectId(testID),
-    });
-    // const test = await testmodel.findOne({ examID, testID });
+  examID,
+  _id: testID,
+}).select("-subjects.questions.answer");;
 
     if (!test)
       return res
@@ -126,7 +167,7 @@ export const getTestById = async (req, res) => {
         .json({ success: false, message: "Test not found" });
 
     res
-      .status(201)
+      .status(200)
       .json({ success: true, message: "test send successfuly", test });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

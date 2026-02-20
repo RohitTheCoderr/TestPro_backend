@@ -16,9 +16,6 @@ export const hello = async (req, res, next) => {
 export async function isUserExits(req, res, next) {
   try {
     const { mobile, email } = req.body;
-    console.log(":aaaaa", mobile), email;
-    
-
     let exits;
     if (mobile) {
       exits = await userModel.findOne({ mobile });
@@ -48,8 +45,6 @@ export async function isUserExits(req, res, next) {
 export const registerUser = async (req, res, next) => {
   try {
     const userdata = req.body;
-
-    // userdata?.name
 
     if (!userdata?.email && !userdata?.password && !userdata?.mobile) {
       return res.status(400).json({

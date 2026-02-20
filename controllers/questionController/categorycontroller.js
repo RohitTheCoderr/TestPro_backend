@@ -1,6 +1,3 @@
-// import categorymodel from "../../models/examModel/categorymodel";
-// import Exammodel from "../../models/examModel/Exammodel";
-
 import categorymodel from "../../models/examModel/categorymodel.js";
 
 export const getcategoryController = async (req, res) => {
@@ -93,48 +90,8 @@ export const createCategory = async (req, res, next) => {
 };
 
 
-<<<<<<< HEAD
-export const updateCategory = async (req, res, next) => {
-  try {
-    let { name, slug, categoryDetails,categoryID, status } = req.body;
 
-    if (!categoryID) {
-       res.status(401).json({
-        seccess: false,
-        message: " please provide categoryID",
-      });
-    }
-    const iscategory = await categorymodel.findOneAndUpdate({_id:categoryID, name,
-      slug,
-      categoryDetails,
-      status,
-  });
-
-    if (!iscategory) {
-      res.status(404).json({
-        seccess: false,
-        message: "This category not exits",
-      });
-    }
-    // update Test
-    // const category = await categorymodel.updateOne({
-    //   // _id:categoryID,
-    //   name,
-    //   slug,
-    //   categoryDetails,
-    //   status,
-    //   categoryID
-    // });
-
-    res.status(201).json({
-      success: true,
-      message: "category updated successfuly",
-      data: { iscategory },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-=======
-export const updateCategory = async (req, res) => {
+    export const updateCategory = async (req, res) => {
   try {
     let { name, slug, categoryDetails, status, categoryID } = req.body;
 
@@ -178,6 +135,5 @@ export const updateCategory = async (req, res) => {
       success: false,
       message: error.message,
     });
->>>>>>> 5798fa4c2897be4d65e26ca3669bbb2db751537e
   }
 };

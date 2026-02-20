@@ -15,6 +15,7 @@ const ExamSchema = new mongoose.Schema({
   categoryID: { type: Schema.Types.ObjectId, ref: "Category", required: true },
   name: String, // "CGL, MTS"  // human readable
   slug: String, // e.g. "cgl, mts" // for machine readable
+ status:{type: Boolean, default: true,},
   examDetails: examDetails,
 },{
     toJSON: {
