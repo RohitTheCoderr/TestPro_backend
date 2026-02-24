@@ -1,3 +1,4 @@
+
 import categorymodel from "../../models/examModel/categorymodel.js";
 
 export const getcategoryController = async (req, res) => {
@@ -89,9 +90,7 @@ export const createCategory = async (req, res, next) => {
   }
 };
 
-
-
-    export const updateCategory = async (req, res) => {
+export const updateCategory = async (req, res) => {
   try {
     let { name, slug, categoryDetails, status, categoryID } = req.body;
 
