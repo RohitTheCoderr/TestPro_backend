@@ -23,7 +23,6 @@ export const sendOtpEmail = async ({ to, subject, html }) => {
     });
 
     // const checkgmian = await transporter.verify();
-    // console.log("Gmail login OK", checkgmian);
 
     await transporter.sendMail({
       from: "Test@Pro.com",

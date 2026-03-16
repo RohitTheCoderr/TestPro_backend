@@ -9,8 +9,6 @@ export const SmsOtp = async (mobile, channel) => {
 
   
   try {
-    console.log("env", clientId, secretId, otpExpTime, otpLength);
-
     if (!clientId || !secretId || !otpExpTime || !otpLength) {
       console.log(
         "OTPLESS_CLIENT_ID OR OTPLESS_CLIENT_SECRET OR OTPLESS_EXPIRY_TIME OR OTPLESS_LENGTH may not in .env"
@@ -29,13 +27,10 @@ export const SmsOtp = async (mobile, channel) => {
       secretId
     );
 
-    console.log("response", response);
-
     if (response.hasOwnProperty("success") && !response.success) {
       return { success: false, message: "server error" };
     }
 
-    console.log("response after if", response);
     return { success: true, message: response.orderId };
   } catch (error) {
     return {
