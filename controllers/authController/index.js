@@ -16,6 +16,8 @@ export const hello = async (req, res, next) => {
 export async function isUserExits(req, res, next) {
   try {
     const { mobile, email } = req.body;
+    console.log("email, mobile", email, mobile);
+    
     let exits;
     if (mobile) {
       exits = await userModel.findOne({ mobile });
@@ -23,6 +25,8 @@ export async function isUserExits(req, res, next) {
       exits = await userModel.findOne({ email });
     }
 
+    console.log("exits", exits);
+    
     if (req.originalUrl === "/api/user/auth/send_opt") {
       if (exits)
         return res

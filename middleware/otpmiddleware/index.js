@@ -8,6 +8,10 @@ export const generateOtpmiddleware = async (req, res, next) => {
     const email = req.body?.email;
     const mobile = req.body?.mobile;
 
+    console.log("generation email", email);
+    console.log("generation mobile", mobile);
+    
+
     if (!mobile && !email) {
       return res.status(400).json({
         success: false,
