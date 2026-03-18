@@ -118,6 +118,79 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
+
+export const newPassCreation = async (req, res, next) => {
+  try {
+    const userdata = req.body;
+
+   if ((!userdata?.email && !userdata?.mobile) || !userdata?.password) {
+  return res.status(400).json({
+    success: false,
+    message: "Please provide email or mobile and password",
+  });
+}
+
+    let userExists;
+
+    if (userdata?.email) {
+      userExists = await userModel.findOne({ email: userdata?.email });
+    }
+
+    if (userdata?.mobile) {
+      userExists = await userModel.findOne({ mobile: userdata?.mobile });
+    }
+
+    if (!userExists) {
+      return res.status(404).json({
+        success: false,
+        message: "User Not exists",
+      });
+    }
+
+    userdata.password = await createHashedPassword(userdata?.password);
+
+    let role = "student";
+
+    // ✅ Check if email/mobile matches admin list in .env
+    const adminEmails =
+      process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ||
+      [];
+    const adminPhones =
+      `+91${process.env.ADMIN_PHONES?.split(",").map((p) => p.trim()) || []}`
+
+    if (
+      (userdata?.email && adminEmails.includes(userdata.email.toLowerCase())) ||
+      (userdata?.mobile && adminPhones.includes(userdata.mobile))
+    ) {
+      role = "admin";
+    }
+
+    const updatedUser = await userModel.findOneAndUpdate(
+  { _id: userExists._id },
+  {
+    password: userdata.password,
+    role,
+    name: userdata?.name || userExists.name || "Student",
+  },
+  { new: true }
+);
+
+if (updatedUser) {
+  req.userId = updatedUser._id;
+  return next();
+} else {
+  return res.status(500).json({
+    success: false,
+    message: "User not registered. Please try again.",
+  });
+}
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: error.message || "Server error" });
+  }
+};
+
 export const loginUser = async (req, res, next) => {
   try {
     const reqData = req.body;

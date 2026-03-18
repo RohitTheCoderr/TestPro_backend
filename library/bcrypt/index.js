@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-const pass_key = process.env.PASSWORD_SECRET_KEY || "default_test_key";
+const pass_key = process.env.PASSWORD_SECRET_KEY || "rohit is the best boy in the world";
 
 export async function createHashedPassword(simplePass) {
   try {
