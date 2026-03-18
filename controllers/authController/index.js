@@ -208,9 +208,11 @@ export const loginUser = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "user not exits" });
 
-    const varifiedPass = verifiedhashedpass(reqData?.password, user.password);
+    const varifiedPass =await verifiedhashedpass(reqData?.password, user.password);
 
-    if (user && (await varifiedPass)) {
+    console.log("varified or not", varifiedPass);
+    
+    if (user && varifiedPass) {
       req.userId = user._id;
       next();
     } else {

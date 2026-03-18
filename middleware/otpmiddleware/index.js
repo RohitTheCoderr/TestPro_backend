@@ -99,7 +99,7 @@ export async function otpVerification(req, res, next) {
       const check = await otpModel.findOne({ email }, { mailOtp: 1 });
       if (check?.mailOtp == otp) {
         result = { success: true, message: "OTP verified", data: {} };
-        await otpModel.findOneAndDelete({ email });
+        // await otpModel.findOneAndDelete({ email });
       }
     }
 
@@ -112,6 +112,9 @@ export async function otpVerification(req, res, next) {
       result = await VerifySmsOtp(mobile, otpID, otp);
     }
 
+
+    console.log("result for otp varifiaction", result);
+    
     if (result?.success) {
       delete req.body.otp;
       delete req.body.otpID;
