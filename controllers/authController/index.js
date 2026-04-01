@@ -25,8 +25,6 @@ export async function isUserExits(req, res, next) {
       exits = await userModel.findOne({ email });
     }
 
-    console.log("exits", exits);
-    
     if (req.originalUrl === "/api/user/auth/send_opt") {
       if (exits)
         return res
@@ -41,6 +39,9 @@ export async function isUserExits(req, res, next) {
         .status(400)
         .json({ success: false, message: "user not found" });
     }
+     // Fallback: never hang
+    return res.status(400).json({ success: false, message: "Invalid request" });
+
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

@@ -8,10 +8,6 @@ export const generateOtpmiddleware = async (req, res, next) => {
     const email = req.body?.email;
     const mobile = req.body?.mobile;
 
-    console.log("generation email", email);
-    console.log("generation mobile", mobile);
-    
-
     if (!mobile && !email) {
       return res.status(400).json({
         success: false,
@@ -75,7 +71,8 @@ export const generateOtpmiddleware = async (req, res, next) => {
         .status(500)
         .json({ success: false, message: "OTP not generated" });
   } catch (error) {
-    next(error);
+    console.error("Unhandled OTP error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -99,7 +96,7 @@ export async function otpVerification(req, res, next) {
       const check = await otpModel.findOne({ email }, { mailOtp: 1 });
       if (check?.mailOtp == otp) {
         result = { success: true, message: "OTP verified", data: {} };
-        // await otpModel.findOneAndDelete({ email });
+        await otpModel.findOneAndDelete({ email });
       }
     }
 
@@ -113,8 +110,6 @@ export async function otpVerification(req, res, next) {
     }
 
 
-    console.log("result for otp varifiaction", result);
-    
     if (result?.success) {
       delete req.body.otp;
       delete req.body.otpID;
