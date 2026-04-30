@@ -40,7 +40,7 @@ export async function isUserExits(req, res, next) {
         .json({ success: false, message: "user not found" });
     }
      // Fallback: never hang
-    return res.status(400).json({ success: false, message: "Invalid request" });
+     return res.status(400).json({ success: false, message: "Invalid request" });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
