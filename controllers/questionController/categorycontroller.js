@@ -6,6 +6,7 @@ import categorymodel from "../../models/examModel/categorymodel.js";
 export const getcategoryController = async (req, res) => {
   try {
     const categories = await categorymodel.find({status:true});
+
     if (categories) {
       res.status(200).json({
         success: true,
@@ -56,7 +57,7 @@ export const getSingleCategoryController = async (req, res) => {
   }
 };
 
-//  for category upload
+
 export const createCategory = async (req, res, next) => {
   try {
     let { name, slug, categoryDetails, status } = req.body;
@@ -92,52 +93,11 @@ export const createCategory = async (req, res, next) => {
   }
 };
 
-
-<<<<<<< HEAD
-export const updateCategory = async (req, res, next) => {
-  try {
-    let { name, slug, categoryDetails,categoryID, status } = req.body;
-
-    if (!categoryID) {
-       res.status(401).json({
-        seccess: false,
-        message: " please provide categoryID",
-      });
-    }
-    const iscategory = await categorymodel.findOneAndUpdate({_id:categoryID, name,
-      slug,
-      categoryDetails,
-      status,
-  });
-
-    if (!iscategory) {
-      res.status(404).json({
-        seccess: false,
-        message: "This category not exits",
-      });
-    }
-    // update Test
-    // const category = await categorymodel.updateOne({
-    //   // _id:categoryID,
-    //   name,
-    //   slug,
-    //   categoryDetails,
-    //   status,
-    //   categoryID
-    // });
-
-    res.status(201).json({
-      success: true,
-      message: "category updated successfuly",
-      data: { iscategory },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-=======
+//  for category upload
 export const updateCategory = async (req, res) => {
   try {
     let { name, slug, categoryDetails, status, categoryID } = req.body;
-
+ 
     if (!categoryID) {
       return res.status(400).json({
         success: false,
@@ -147,6 +107,19 @@ export const updateCategory = async (req, res) => {
 
     if (slug) slug = slug.toLowerCase();
 
+    // 🔍 Check duplicate (except current category)
+    const duplicateCategory = await categorymodel.findOne({
+      _id: { $ne: categoryID },   // exclude current category
+      $or: [{ name }, { slug }],
+    });
+
+    if (duplicateCategory) {
+      return res.status(409).json({
+        success: false,
+        message: "Category name or slug already exists",
+      });
+    }
+ 
     const category = await categorymodel.findByIdAndUpdate(
       categoryID,
       {
@@ -178,6 +151,5 @@ export const updateCategory = async (req, res) => {
       success: false,
       message: error.message,
     });
->>>>>>> 5798fa4c2897be4d65e26ca3669bbb2db751537e
   }
-};
+}

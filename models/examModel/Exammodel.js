@@ -16,6 +16,7 @@ const ExamSchema = new mongoose.Schema({
   name: String, // "CGL, MTS"  // human readable
   slug: String, // e.g. "cgl, mts" // for machine readable
   examDetails: examDetails,
+  status:{type: Boolean, default: true,}
 },{
     toJSON: {
       virtuals: true,

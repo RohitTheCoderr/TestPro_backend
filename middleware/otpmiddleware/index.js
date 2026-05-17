@@ -48,14 +48,6 @@ export const generateOtpmiddleware = async (req, res, next) => {
       result = await SmsOtp(mobile, "WHATSAPP");
     }
 
-<<<<<<< HEAD
-    console.log("reslutsssssss====", result);
-    
-=======
-console.log(":resulkt", result);
-
-
->>>>>>> 5798fa4c2897be4d65e26ca3669bbb2db751537e
     if (result?.success) {
       const otpID = result?.message?.startsWith("Otp")
         ? result?.message
