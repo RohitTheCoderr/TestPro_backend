@@ -8,8 +8,6 @@ export const generateOtpmiddleware = async (req, res, next) => {
     const email = req.body?.email;
     const mobile = req.body?.mobile;
 
-    console.log("email is here", email);
-    
     if (!mobile && !email) {
       return res.status(400).json({
         success: false,
@@ -47,7 +45,7 @@ export const generateOtpmiddleware = async (req, res, next) => {
       // result = await SmsOtp(mobile, "SMS");  // I use free services so sms not active
       result = await SmsOtp(mobile, "WHATSAPP");
     }
-
+    
     if (result?.success) {
       const otpID = result?.message?.startsWith("Otp")
         ? result?.message
@@ -73,7 +71,8 @@ export const generateOtpmiddleware = async (req, res, next) => {
         .status(500)
         .json({ success: false, message: "OTP not generated" });
   } catch (error) {
-    next(error);
+    console.error("Unhandled OTP error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -110,11 +109,13 @@ export async function otpVerification(req, res, next) {
       result = await VerifySmsOtp(mobile, otpID, otp);
     }
 
+
     if (result?.success) {
       delete req.body.otp;
       delete req.body.otpID;
       return next();
-    } else {
+    }
+     else {
       return res
         .status(500)
         .json({ success: false, message: "otp not verified", data: {} });

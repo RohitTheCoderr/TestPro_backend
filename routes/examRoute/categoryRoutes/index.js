@@ -9,10 +9,7 @@ const router = express.Router();
 // /api/category
 router.get("/", getcategoryController);
 
-// Nested route: /api/category/:slug/exams
+// Nested route: /api/category/:categoryID/exams
 router.get("/:categoryID/exams", getExamsByCategoryController);
-
-// Attach exam route (for exam details)
-// router.use("/exam", examRoute);
 
 export { router as categoryRoute };

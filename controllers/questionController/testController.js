@@ -8,7 +8,36 @@ import mongoose from "mongoose";
 // Create a new test (Admin only)
 export const createTest = async (req, res) => {
   try {
-    const { examID, title, type, duration, price, subjects } = req.body;
+
+    const payload=req.body
+
+    if (Array.isArray(payload)) {
+      if (payload.length===0) {
+        return res.status(400).json({success:false, message:"Empty test list"})
+      }
+
+      for(const test of payload){
+        if (!test.examID || !test.testID || !test.subjects?.length) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid test data in bulk payload",
+          });
+        }
+      }
+
+      const tests=await testmodel.insertMany(payload, {ordered:false} // continue even if one questions fails
+        )
+
+         return res.status(201).json({
+        success: true,
+        message: "Tests created successfully",
+        count: tests.length,
+        tests,
+      });
+    }
+
+
+    const { examID, title, test_type, type, duration, price, subjects } = payload;
 
     if (!examID || !title || !subjects || subjects.length === 0) {
       return res
@@ -16,9 +45,20 @@ export const createTest = async (req, res) => {
         .json({ success: false, message: "Missing required fields" });
     }
 
+
+
+        const isExitExam = await Exammodel.findById(examID);
+        
+        if (!isExitExam){
+          return res
+            .status(404)
+            .json({ success: false, message: "Exam category not found" });}
+
+    
     const test = await testmodel.create({
       examID,
       title,
+      test_type,
       type,
       duration,
       price,
@@ -91,15 +131,32 @@ export const updateQuestionImage = async (req, res) => {
   }
 };
 
-// Get all tests for an exam
+// Get all tests for an exam  for user
 export const getAllTestsByExam = async (req, res) => {
   try {
     const { examID } = req.params;
 
     const tests = await testmodel
-      .find({ examID })
+      .find({ examID, status:true })
       .select(" title type duration price examID testID"); // which
 
+    res.status(201).json({
+      success: true,
+      message: "tests details send successfuly",
+      tests,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+//  for admin only
+export const getAllTestsByExamID = async (req, res) => {
+  try {
+    const { examID } = req.params;
+
+    const tests = await testmodel
+      .find({ examID })
     res.status(201).json({
       success: true,
       message: "tests details send successfuly",
@@ -115,10 +172,9 @@ export const getTestById = async (req, res) => {
   try {
     const { examID, testID } = req.params;
     const test = await testmodel.findOne({
-      examID: new mongoose.Types.ObjectId(examID),
-      testID: new mongoose.Types.ObjectId(testID),
-    });
-    // const test = await testmodel.findOne({ examID, testID });
+  examID,
+  _id: testID,
+}).select("-subjects.questions.answer");;
 
     if (!test)
       return res
@@ -126,7 +182,7 @@ export const getTestById = async (req, res) => {
         .json({ success: false, message: "Test not found" });
 
     res
-      .status(201)
+      .status(200)
       .json({ success: true, message: "test send successfuly", test });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -185,33 +241,6 @@ export const submitTest = async (req, res) => {
   }
 };
 
-// export const testsResult = async (req, res) => {
-//   try {
-//     const userId = req.userId;
-//     console.log("userId:", userId);
-
-//     if (!userId) {
-//       return res.status(401).json({ success: false, message: "userId not provided" });
-//     }
-
-//     // ✅ Correct query: find test results by userId
-//     const result = await AttemptSchema.find({ userId }); // or findOne if only one result exists
-
-//     if (!result || result.length === 0) {
-//       return res.status(404).json({ success: false, message: "No test results found", data: {} });
-//     }
-
-//     console.log("result:", result);
-
-//     // ✅ Success response
-//     res.status(200).json({ success: true, message: "Test results fetched successfully", data: result });
-
-//   } catch (error) {
-//     console.error("Error in testsResult:", error);
-//     res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
-//   }
-// };
-
 // export const getSubjectWiseResult = async (req, res) => {
 export const testsResult = async (req, res) => {
   try {
@@ -234,58 +263,6 @@ export const testsResult = async (req, res) => {
     }
 
     const allResults = [];
-
-    // ✅ 2. Loop through each attempt
-    // for (const attempt of attempts) {
-    //   const test = await testmodel.findById(attempt.testID);
-    //   if (!test) continue;
-    //      const negativemark= await Exammodel.findById(test.examID).select('examDetails.negativeMark')
-    //    console.log("negativemark in backend", negativemark);
-
-    //   const subjectReport = {};
-
-    //   // ✅ 3. Loop through subjects of this test
-    //   for (const subject of test.subjects) {
-    //     subjectReport[subject._id] = {
-    //       subjectID: subject._id,
-    //       subjectName: subject.name,
-    //       total: 0,
-    //       correct: 0,
-    //       wrong: 0,
-    //     };
-
-    //     for (const question of subject.questions) {
-    //       const userAnswer = attempt.answers.find(
-    //         (ans) => ans.questionId.toString() === question._id.toString()
-    //       );
-
-    //       if (userAnswer) {
-    //         subjectReport[subject._id].total++;
-    //         if (userAnswer.selectedOptionIndex === question.answer) {
-    //           subjectReport[subject._id].correct++;
-    //         } else {
-    //           subjectReport[subject._id].wrong++;
-    //         }
-    //       }
-    //     }
-    //   }
-
-    //   const subjectWiseResult = Object.values(subjectReport).map((s) => ({
-    //     ...s,
-    //     percentage: s.total > 0 ? ((s.correct / s.total) * 100).toFixed(2) : "0.00",
-    //     // percentage: s.total > 0 ? ((s.correct-(wrong*negativemark) / s.total) * 100).toFixed(2) : "0.00",
-    //   }));
-
-    //   // ✅ Push this test result to final array
-    //   allResults.push({
-    //     testID: attempt.testID,
-    //     testTitle: test.title,
-    //     totalScore: attempt.score,
-    //     submittedAt: attempt.submittedAt,
-    //     subjectWiseResult,
-    //   });
-    // }
-
     for (const attempt of attempts) {
       const test = await testmodel.findById(attempt.testID);
       if (!test) continue;

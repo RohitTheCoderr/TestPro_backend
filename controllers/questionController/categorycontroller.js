@@ -1,5 +1,3 @@
-// import categorymodel from "../../models/examModel/categorymodel";
-// import Exammodel from "../../models/examModel/Exammodel";
 
 import categorymodel from "../../models/examModel/categorymodel.js";
 
@@ -93,7 +91,10 @@ export const createCategory = async (req, res, next) => {
   }
 };
 
+<<<<<<< HEAD
 //  for category upload
+=======
+>>>>>>> 8cc4f1c5513bd270526480cd3696167b9b2d59b7
 export const updateCategory = async (req, res) => {
   try {
     let { name, slug, categoryDetails, status, categoryID } = req.body;

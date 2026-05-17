@@ -8,9 +8,15 @@ dotenv.config()
 
 connectDB()
 const app=express()
-app.use(cors())
-app.use(express.json())
+// --- Allowed Frontends ---
+const allowedOrigins = [
+  "http://localhost:3000",        // local dev
+  "http://localhost:3001",        // local dev
+  "https://testpro-exams.vercel.app"    // live frontend
+];
 
+app.use(cors());
+app.use(express.json())
 app.use("/api", router)
 
 
