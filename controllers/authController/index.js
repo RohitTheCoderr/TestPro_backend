@@ -31,7 +31,7 @@ export async function isUserExits(req, res, next) {
           .status(400)
           .json({ success: false, message: "user already Exits" });
 
-      next();
+      return next();
     } else if (req.originalUrl == "/api/user/auth/forget_password") {
       if (exits) return next();
 
