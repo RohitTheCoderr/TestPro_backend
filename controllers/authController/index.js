@@ -16,7 +16,6 @@ export const hello = async (req, res, next) => {
 export async function isUserExits(req, res, next) {
   try {
     const { mobile, email } = req.body;
-    console.log("email, mobile", email, mobile);
     
     let exits;
     if (mobile) {
