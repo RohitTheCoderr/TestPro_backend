@@ -8,15 +8,16 @@ import mongoose from "mongoose";
 // Create a new test (Admin only)
 export const createTest = async (req, res) => {
   try {
-
-    const payload=req.body
+    const payload = req.body;
 
     if (Array.isArray(payload)) {
-      if (payload.length===0) {
-        return res.status(400).json({success:false, message:"Empty test list"})
+      if (payload.length === 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Empty test list" });
       }
 
-      for(const test of payload){
+      for (const test of payload) {
         if (!test.examID || !test.testID || !test.subjects?.length) {
           return res.status(400).json({
             success: false,
@@ -25,10 +26,12 @@ export const createTest = async (req, res) => {
         }
       }
 
-      const tests=await testmodel.insertMany(payload, {ordered:false} // continue even if one questions fails
-        )
+      const tests = await testmodel.insertMany(
+        payload,
+        { ordered: false }, // continue even if one questions fails
+      );
 
-         return res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Tests created successfully",
         count: tests.length,
@@ -36,8 +39,8 @@ export const createTest = async (req, res) => {
       });
     }
 
-
-    const { examID, title, test_type, type, duration, price, subjects } = payload;
+    const { examID, title, test_type, type, duration, price, subjects } =
+      payload;
 
     if (!examID || !title || !subjects || subjects.length === 0) {
       return res
@@ -45,16 +48,14 @@ export const createTest = async (req, res) => {
         .json({ success: false, message: "Missing required fields" });
     }
 
+    const isExitExam = await Exammodel.findById(examID);
 
+    if (!isExitExam) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Exam category not found" });
+    }
 
-        const isExitExam = await Exammodel.findById(examID);
-        
-        if (!isExitExam){
-          return res
-            .status(404)
-            .json({ success: false, message: "Exam category not found" });}
-
-    
     const test = await testmodel.create({
       examID,
       title,
@@ -70,6 +71,107 @@ export const createTest = async (req, res) => {
       .json({ success: true, message: "Test created successfully", test });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAdminTestById = async (req, res) => {
+  try {
+    const { testID } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(testID)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid test ID" });
+    }
+
+    const test = await testmodel.findById(testID);
+    if (!test) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Test not found" });
+    }
+
+    const exam = await Exammodel.findById(test.examID).select("categoryID");
+    const testDetails = test.toObject({ virtuals: false });
+    const { _id, __v, ...testData } = testDetails;
+    return res.status(200).json({
+      success: true,
+      message: "Test details sent successfully",
+      test: { ...testData, testID: _id.toString() },
+      categoryID: exam?.categoryID ?? "",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateTestById = async (req, res) => {
+  try {
+    const { testID } = req.params;
+    const {
+      examID,
+      title,
+      test_type,
+      type,
+      duration,
+      price,
+      status,
+      subjects,
+    } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(testID)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid test ID" });
+    }
+    if (
+      !examID ||
+      !title?.trim() ||
+      !Array.isArray(subjects) ||
+      subjects.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Exam, title, and at least one subject are required",
+      });
+    }
+
+    const [existingTest, exam] = await Promise.all([
+      testmodel.findById(testID).select("_id"),
+      Exammodel.findById(examID).select("_id"),
+    ]);
+    if (!existingTest) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Test not found" });
+    }
+    if (!exam) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Exam not found" });
+    }
+
+    const test = await testmodel.findByIdAndUpdate(
+      testID,
+      {
+        $set: {
+          examID,
+          title: title.trim(),
+          test_type,
+          type,
+          duration,
+          price,
+          status,
+          subjects,
+        },
+      },
+      { new: true, runValidators: true },
+    );
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Test updated successfully", test });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -137,7 +239,7 @@ export const getAllTestsByExam = async (req, res) => {
     const { examID } = req.params;
 
     const tests = await testmodel
-      .find({ examID, status:true })
+      .find({ examID, status: true })
       .select(" title type duration price examID testID"); // which
 
     res.status(201).json({
@@ -155,8 +257,7 @@ export const getAllTestsByExamID = async (req, res) => {
   try {
     const { examID } = req.params;
 
-    const tests = await testmodel
-      .find({ examID })
+    const tests = await testmodel.find({ examID });
     res.status(201).json({
       success: true,
       message: "tests details send successfuly",
@@ -171,10 +272,12 @@ export const getAllTestsByExamID = async (req, res) => {
 export const getTestById = async (req, res) => {
   try {
     const { examID, testID } = req.params;
-    const test = await testmodel.findOne({
-  examID,
-  _id: testID,
-}).select("-subjects.questions.answer");;
+    const test = await testmodel
+      .findOne({
+        examID,
+        _id: testID,
+      })
+      .select("-subjects.questions.answer");
 
     if (!test)
       return res
@@ -206,13 +309,13 @@ export const submitTest = async (req, res) => {
     answers.forEach((element) => {
       // Find the subject by ID
       const subject = test.subjects.find(
-        (sub) => sub._id.toString() === element.subjectId
+        (sub) => sub._id.toString() === element.subjectId,
       );
       if (!subject) return;
 
       // Now questions is an array, so use .find
       const question = subject.questions.find(
-        (q) => q._id.toString() === element.questionId
+        (q) => q._id.toString() === element.questionId,
       );
       if (!question) return;
 
@@ -254,12 +357,10 @@ export const testsResult = async (req, res) => {
     // ✅ 1. Fetch all attempts by user
     const attempts = await AttemptSchema.find({ userId });
     if (!attempts || attempts.length === 0) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "No test attempts found for this user",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "No test attempts found for this user",
+      });
     }
 
     const allResults = [];
@@ -269,7 +370,7 @@ export const testsResult = async (req, res) => {
 
       // ✅ Get negative marking info from exam
       const exam = await Exammodel.findById(test.examID).select(
-        "examDetails.negativeMark"
+        "examDetails.negativeMark",
       );
       const negativeMark = exam?.examDetails?.negativeMark || 0;
 
@@ -289,7 +390,7 @@ export const testsResult = async (req, res) => {
 
         for (const question of subject.questions) {
           const userAnswer = attempt.answers.find(
-            (ans) => ans.questionId.toString() === question._id.toString()
+            (ans) => ans.questionId.toString() === question._id.toString(),
           );
 
           if (userAnswer) {

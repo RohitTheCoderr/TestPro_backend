@@ -1,7 +1,23 @@
 import express from "express";
-import { createCategory, getcategoriesController, getSingleCategoryController, updateCategory } from "../../controllers/questionController/categorycontroller.js";
-import { createExamBycategory, getAllExamsController, getSingleExamController, updateExamByID } from "../../controllers/questionController/examcontroller.js";
-import { createTest, getAllTestsByExamID, updateQuestionImage } from "../../controllers/questionController/testController.js";
+import {
+  createCategory,
+  getcategoriesController,
+  getSingleCategoryController,
+  updateCategory,
+} from "../../controllers/questionController/categorycontroller.js";
+import {
+  createExamBycategory,
+  getAllExamsController,
+  getSingleExamController,
+  updateExamByID,
+} from "../../controllers/questionController/examcontroller.js";
+import {
+  createTest,
+  getAdminTestById,
+  getAllTestsByExamID,
+  updateQuestionImage,
+  updateTestById,
+} from "../../controllers/questionController/testController.js";
 import { upload } from "../../config/cloudinaryConfig.js";
 
 const router = express.Router();
@@ -19,13 +35,13 @@ router.patch("/exam/update", updateExamByID);
 
 router.get("/test/list/:examID", getAllTestsByExamID);
 router.post("/test/create", createTest);
-router.patch("/test/update", createTest);
-
+router.get("/test/:testID", getAdminTestById);
+router.patch("/test/:testID", updateTestById);
 
 router.patch(
   "/test/:testID/subjects/:subjectID/questions/:questionID/image",
   upload.single("image"),
-  updateQuestionImage
+  updateQuestionImage,
 );
 
 export { router as adminRouter };

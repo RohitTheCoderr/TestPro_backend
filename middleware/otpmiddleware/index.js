@@ -45,7 +45,7 @@ export const generateOtpmiddleware = async (req, res, next) => {
       // result = await SmsOtp(mobile, "SMS");  // I use free services so sms not active
       result = await SmsOtp(mobile, "WHATSAPP");
     }
-    
+
     if (result?.success) {
       const otpID = result?.message?.startsWith("Otp")
         ? result?.message
@@ -109,13 +109,11 @@ export async function otpVerification(req, res, next) {
       result = await VerifySmsOtp(mobile, otpID, otp);
     }
 
-
     if (result?.success) {
       delete req.body.otp;
       delete req.body.otpID;
       return next();
-    }
-     else {
+    } else {
       return res
         .status(500)
         .json({ success: false, message: "otp not verified", data: {} });

@@ -4,6 +4,9 @@ import {
 } from "../../library/bcrypt/index.js";
 import userModel from "../../models/User.js";
 
+const MOBILE_UNSUPPORTED_MESSAGE =
+  "Mobile number service is temporarily unavailable. Please use your email.";
+
 //  for testing controller
 export const hello = async (req, res, next) => {
   try {
@@ -16,7 +19,14 @@ export const hello = async (req, res, next) => {
 export async function isUserExits(req, res, next) {
   try {
     const { mobile, email } = req.body;
-    
+
+    if (mobile) {
+      return res.status(400).json({
+        success: false,
+        message: MOBILE_UNSUPPORTED_MESSAGE,
+      });
+    }
+
     let exits;
     if (mobile) {
       exits = await userModel.findOne({ mobile });
@@ -38,9 +48,8 @@ export async function isUserExits(req, res, next) {
         .status(400)
         .json({ success: false, message: "user not found" });
     }
-     // Fallback: never hang
-     return res.status(400).json({ success: false, message: "Invalid request" });
-
+    // Fallback: never hang
+    return res.status(400).json({ success: false, message: "Invalid request" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -49,6 +58,13 @@ export async function isUserExits(req, res, next) {
 export const registerUser = async (req, res, next) => {
   try {
     const userdata = req.body;
+
+    if (userdata?.mobile) {
+      return res.status(400).json({
+        success: false,
+        message: MOBILE_UNSUPPORTED_MESSAGE,
+      });
+    }
 
     if (!userdata?.email && !userdata?.password && !userdata?.mobile) {
       return res.status(400).json({
@@ -82,8 +98,7 @@ export const registerUser = async (req, res, next) => {
     const adminEmails =
       process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ||
       [];
-    const adminPhones =
-      `+91${process.env.ADMIN_PHONES?.split(",").map((p) => p.trim()) || []}`
+    const adminPhones = `+91${process.env.ADMIN_PHONES?.split(",").map((p) => p.trim()) || []}`;
 
     if (
       (userdata?.email && adminEmails.includes(userdata.email.toLowerCase())) ||
@@ -104,12 +119,10 @@ export const registerUser = async (req, res, next) => {
       req.userId = newUser._id;
       return next();
     } else {
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "User not registered. Please try again.",
-        });
+      res.status(500).json({
+        success: false,
+        message: "User not registered. Please try again.",
+      });
     }
   } catch (error) {
     res
@@ -118,17 +131,23 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
-
 export const newPassCreation = async (req, res, next) => {
   try {
     const userdata = req.body;
 
-   if ((!userdata?.email && !userdata?.mobile) || !userdata?.password) {
-  return res.status(400).json({
-    success: false,
-    message: "Please provide email or mobile and password",
-  });
-}
+    if (userdata?.mobile) {
+      return res.status(400).json({
+        success: false,
+        message: MOBILE_UNSUPPORTED_MESSAGE,
+      });
+    }
+
+    if ((!userdata?.email && !userdata?.mobile) || !userdata?.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email or mobile and password",
+      });
+    }
 
     let userExists;
 
@@ -155,8 +174,7 @@ export const newPassCreation = async (req, res, next) => {
     const adminEmails =
       process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ||
       [];
-    const adminPhones =
-      `+91${process.env.ADMIN_PHONES?.split(",").map((p) => p.trim()) || []}`
+    const adminPhones = `+91${process.env.ADMIN_PHONES?.split(",").map((p) => p.trim()) || []}`;
 
     if (
       (userdata?.email && adminEmails.includes(userdata.email.toLowerCase())) ||
@@ -166,24 +184,24 @@ export const newPassCreation = async (req, res, next) => {
     }
 
     const updatedUser = await userModel.findOneAndUpdate(
-  { _id: userExists._id },
-  {
-    password: userdata.password,
-    role,
-    name: userdata?.name || userExists.name || "Student",
-  },
-  { new: true }
-);
+      { _id: userExists._id },
+      {
+        password: userdata.password,
+        role,
+        name: userdata?.name || userExists.name || "Student",
+      },
+      { new: true },
+    );
 
-if (updatedUser) {
-  req.userId = updatedUser._id;
-  return next();
-} else {
-  return res.status(500).json({
-    success: false,
-    message: "User not registered. Please try again.",
-  });
-}
+    if (updatedUser) {
+      req.userId = updatedUser._id;
+      return next();
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: "User not registered. Please try again.",
+      });
+    }
   } catch (error) {
     res
       .status(500)
@@ -194,6 +212,14 @@ if (updatedUser) {
 export const loginUser = async (req, res, next) => {
   try {
     const reqData = req.body;
+
+    if (reqData?.mobile) {
+      return res.status(400).json({
+        success: false,
+        message: MOBILE_UNSUPPORTED_MESSAGE,
+      });
+    }
+
     let user;
     if (reqData?.email) {
       user = await userModel.findOne({ email: reqData.email });
@@ -208,10 +234,13 @@ export const loginUser = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "user not exits" });
 
-    const varifiedPass =await verifiedhashedpass(reqData?.password, user.password);
+    const varifiedPass = await verifiedhashedpass(
+      reqData?.password,
+      user.password,
+    );
 
     console.log("varified or not", varifiedPass);
-    
+
     if (user && varifiedPass) {
       req.userId = user._id;
       next();
