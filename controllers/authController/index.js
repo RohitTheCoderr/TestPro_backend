@@ -239,8 +239,6 @@ export const loginUser = async (req, res, next) => {
       user.password,
     );
 
-    console.log("varified or not", varifiedPass);
-
     if (user && varifiedPass) {
       req.userId = user._id;
       next();

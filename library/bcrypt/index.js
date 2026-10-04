@@ -1,11 +1,9 @@
 import bcrypt from "bcrypt";
 
-
-
 export async function createHashedPassword(simplePass) {
   try {
-    const pass_key = process.env.PASSWORD_SECRET_KEY 
-    
+    const pass_key = process.env.PASSWORD_SECRET_KEY;
+
     const saltround = 12;
     if (!simplePass) throw new Error("Password required");
     if (!pass_key) {
@@ -23,8 +21,7 @@ export async function createHashedPassword(simplePass) {
 
 export async function verifiedhashedpass(simplePass, hashedPass) {
   try {
-    // console.log("passkey", pass_key);
-const pass_key=process.env.PASSWORD_SECRET_KEY
+    const pass_key = process.env.PASSWORD_SECRET_KEY;
 
     if (!pass_key) {
       throw new Error("Missing PASSWORD_SECRET_KEY");

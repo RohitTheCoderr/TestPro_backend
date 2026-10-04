@@ -129,7 +129,6 @@ export const getSingleExamController = async (req, res) => {
 export const createExamBycategory = async (req, res, next) => {
   try {
     const { categoryID, name, slug, examDetails } = req.body;
-    console.log("detals", categoryID, name, slug, examDetails);
 
     if (!categoryID || !name || !slug || !examDetails)
       return res.status(400).json({
