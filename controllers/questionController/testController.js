@@ -370,7 +370,7 @@ export const testsResult = async (req, res) => {
 
       // ✅ Get negative marking info from exam
       const exam = await Exammodel.findById(test.examID).select(
-        "examDetails.negativeMark",
+        "name examDetails.negativeMark",
       );
       const negativeMark = exam?.examDetails?.negativeMark || 0;
 
@@ -422,7 +422,9 @@ export const testsResult = async (req, res) => {
 
       // ✅ Push this test’s summary to final array
       allResults.push({
+        attemptID: attempt._id.toString(),
         testID: attempt.testID,
+        examName: exam?.name || "Unknown Exam",
         testTitle: test.title,
         totalScore: attempt.score,
         negativeMark,
@@ -441,5 +443,140 @@ export const testsResult = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+export const getTestResultDetails = async (req, res) => {
+  try {
+    const { attemptID } = req.params;
+    const userId = req.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(attemptID)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid test result ID" });
+    }
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
+    }
+
+    const attempt = await AttemptSchema.findOne({ _id: attemptID, userId });
+    if (!attempt) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Test result not found" });
+    }
+
+    const test = await testmodel.findById(attempt.testID);
+    if (!test) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "The test for this result was not found",
+        });
+    }
+
+    const exam = await Exammodel.findById(test.examID).select(
+      "name examDetails.negativeMark",
+    );
+    const subjects = test.subjects.map((subject) => ({
+      subjectID: subject._id.toString(),
+      subjectName: subject.name,
+      questions: subject.questions.map((question) => {
+        const userAnswer = attempt.answers.find(
+          (answer) =>
+            answer.subjectId.toString() === subject._id.toString() &&
+            answer.questionId.toString() === question._id.toString(),
+        );
+        const selectedOptionIndex = userAnswer?.selectedOptionIndex ?? null;
+
+        return {
+          questionID: question._id.toString(),
+          question: question.question,
+          options: question.options,
+          image: question.image,
+          details: question.details || "",
+          correctOptionIndex: question.answer,
+          selectedOptionIndex,
+          isCorrect:
+            selectedOptionIndex === null
+              ? null
+              : selectedOptionIndex === question.answer,
+        };
+      }),
+    }));
+
+    const questions = subjects.flatMap((subject) => subject.questions);
+    const attempted = questions.filter(
+      (question) => question.selectedOptionIndex !== null,
+    ).length;
+    const correct = questions.filter((question) => question.isCorrect).length;
+
+    return res.status(200).json({
+      success: true,
+      message: "Test result details fetched successfully",
+      data: {
+        attemptID: attempt._id.toString(),
+        testTitle: test.title,
+        examName: exam?.name || "Unknown Exam",
+        score: attempt.score,
+        submittedAt: attempt.submittedAt,
+        negativeMark: exam?.examDetails?.negativeMark || 0,
+        totalQuestions: questions.length,
+        attempted,
+        correct,
+        wrong: attempted - correct,
+        subjects,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching test result details:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error" });
+  }
+};
+
+export const deleteTestResult = async (req, res) => {
+  try {
+    const { attemptID } = req.params;
+    const userId = req.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(attemptID)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid test result ID" });
+    }
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
+    }
+
+    const result = await AttemptSchema.findOneAndDelete({
+      _id: attemptID,
+      userId,
+    });
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Test result not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Test result deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting test result:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error" });
   }
 };

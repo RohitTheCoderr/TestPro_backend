@@ -3,21 +3,79 @@ import Exammodel from "../../models/examModel/Exammodel.js";
 // import ExamTest from "../models/Test.js";
 
 // GET /api/category/:categoryID/exams
+// export const getExamsByCategoryController = async (req, res) => {
+//   try {
+//     const { categoryID } = req.params;
+
+//     if (categoryID === "all") {
+//       const exams = await Exammodel.find({ status: true });
+//     }
+//     // const category = await categorymodel.findById(categoryID );
+//     const category = await categorymodel.find({
+//       _id: categoryID,
+//       status: true,
+//     });
+
+//     if (!category)
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Category not found" });
+
+//     const exams = await Exammodel.find({ categoryID, status: true });
+//     res.json({ success: true, data: { category, exams } });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
 export const getExamsByCategoryController = async (req, res) => {
   try {
     const { categoryID } = req.params;
-    // const category = await categorymodel.findById(categoryID );
-    const category = await categorymodel.find({_id:categoryID, status:true} );
-     
-    if (!category)
-      return res
-        .status(404)
-        .json({ success: false, message: "Category not found" });
+    const activeExamFilter = { status: { $ne: false } };
 
-    const exams = await Exammodel.find({ categoryID, status:true });
-    res.json({ success: true, data: { category, exams } });
+    if (categoryID === "all") {
+      const exams = await Exammodel.find(activeExamFilter);
+
+      return res.json({
+        success: true,
+        data: {
+          category: null,
+          exams,
+        },
+      });
+    }
+
+    // Get active category
+    const category = await categorymodel.findOne({
+      _id: categoryID,
+      status: true,
+    });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    // Get exams belonging to category
+    const exams = await Exammodel.find({
+      categoryID,
+      ...activeExamFilter,
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        category,
+        exams,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -25,15 +83,19 @@ export const getAllExamsController = async (req, res) => {
   try {
     const { categoryID } = req.params;
 
-    const category = await categorymodel.findById(categoryID );
-    
+    const category = await categorymodel.findById(categoryID);
+
     if (!category)
       return res
         .status(404)
         .json({ success: false, message: "Category not found" });
 
     const exams = await Exammodel.find({ categoryID: category._id });
-    res.status(201).json({ success: true, message: "Data send successfully", data: { category, exams } });
+    res.status(201).json({
+      success: true,
+      message: "Data send successfully",
+      data: { category, exams },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -44,13 +106,21 @@ export const getSingleExamController = async (req, res) => {
     const { examID } = req.params;
 
     if (!examID) {
-      return res.status(401).json({success:false, message:"Please provide ExamID", data:{}})
+      return res
+        .status(401)
+        .json({ success: false, message: "Please provide ExamID", data: {} });
     }
     const exam = await Exammodel.findById(examID);
     if (!exam) {
-     return res.status(404).json({success:false, message:"Exam Not found", data:{}})
+      return res
+        .status(404)
+        .json({ success: false, message: "Exam Not found", data: {} });
     }
-    res.status(201).json({ success: true, message:"Exam send successfully", data: { exam } });
+    res.status(201).json({
+      success: true,
+      message: "Exam send successfully",
+      data: { exam },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -68,11 +138,12 @@ export const createExamBycategory = async (req, res, next) => {
       });
 
     const category = await categorymodel.findById(categoryID);
-    
-    if (!category){
+
+    if (!category) {
       return res
         .status(404)
-        .json({ success: false, message: "Category not found" });}
+        .json({ success: false, message: "Category not found" });
+    }
 
     const exam = await Exammodel.create({
       name,
@@ -81,7 +152,6 @@ export const createExamBycategory = async (req, res, next) => {
       examDetails,
     });
 
-    
     res.status(201).json({
       success: true,
       message: "Exam created successfuly",
@@ -96,29 +166,34 @@ export const updateExamByID = async (req, res, next) => {
     let { ExamID, name, slug, examDetails, status } = req.body;
 
     if (!ExamID) {
-     return res.status(400).json({success:false, message:"please provide ExamID", data:{} })
+      return res
+        .status(400)
+        .json({ success: false, message: "please provide ExamID", data: {} });
     }
 
     if (slug) slug = slug.toLowerCase();
 
-    const exam = await Exammodel.findByIdAndUpdate(ExamID,{
-      name,
-      slug,
-      status,
-      examDetails,
-    }, 
-    {
-        new: true,       // return updated doc
+    const exam = await Exammodel.findByIdAndUpdate(
+      ExamID,
+      {
+        name,
+        slug,
+        status,
+        examDetails,
+      },
+      {
+        new: true, // return updated doc
         runValidators: true,
-      });
+      },
+    );
 
-      if (!exam) {
-        res.status(404).json({
-      success: false,
-      message: "Exam not found",
-      data: exam ,
-    });
-      }
+    if (!exam) {
+      res.status(404).json({
+        success: false,
+        message: "Exam not found",
+        data: exam,
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -130,4 +205,4 @@ export const updateExamByID = async (req, res, next) => {
   }
 };
 
-updateExamByID
+updateExamByID;
