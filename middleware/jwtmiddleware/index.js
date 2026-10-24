@@ -13,23 +13,20 @@ export const createJwttoken = async (req, res, next) => {
         .json({ success: false, message: "UserId not found" });
     }
 
-
     const token = getitngjwttoken(userId); // jwt token gen need
 
     if (!token) {
-  return res.status(500).json({
-    success: false,
-    message: "Failed to generate token",
-  });
-}
-    
-   const user = await userModel
-  .findById(userId)
-  .select("-password -__v");
+      return res.status(500).json({
+        success: false,
+        message: "Failed to generate token",
+      });
+    }
+
+    const user = await userModel.findById(userId).select("-password -__v");
 
     return res.status(202).json({
       success: true,
-      message: "Token generatedd successfully",
+      message: "Token generated successfully",
       data: { token, user },
     });
   } catch (error) {
@@ -37,7 +34,7 @@ export const createJwttoken = async (req, res, next) => {
   }
 };
 
-export const varifyJwtToken = (req, res, next) => {
+export const verifyJwtToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -48,27 +45,23 @@ export const varifyJwtToken = (req, res, next) => {
       if (req.userId) {
         return next();
       } else {
-        throw new Error("token not verified");
+        throw new Error("Token not verified");
       }
     } else {
       res
         .status(401)
-        .json({ success: false, message: "Header authrization mising" });
+        .json({ success: false, message: "Header authorization missing" });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "something went wrong faild to verified token",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong failed to verify token",
+    });
   }
 };
 
-
 export const verifyAdmin = async (req, res, next) => {
-  
-  varifyJwtToken(req, res, async () => {
+  verifyJwtToken(req, res, async () => {
     const user = await userModel.findById(req.userId);
     if (user && user.role === "admin") {
       next();

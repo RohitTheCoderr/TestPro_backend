@@ -7,21 +7,21 @@ import {
   submitTest,
   testsResult,
 } from "../../../controllers/questionController/testController.js";
-import { varifyJwtToken } from "../../../middleware/jwtmiddleware/index.js";
+import { verifyJwtToken } from "../../../middleware/jwtmiddleware/index.js";
 
 const router = express.Router();
 
 // Protected route - user must be logged in
-router.get("/testsresult", varifyJwtToken, testsResult);
-router.get("/testsresult/:attemptID", varifyJwtToken, getTestResultDetails);
-router.delete("/testsresult/:attemptID", varifyJwtToken, deleteTestResult);
+router.get("/testsresult", verifyJwtToken, testsResult);
+router.get("/testsresult/:attemptID", verifyJwtToken, getTestResultDetails);
+router.delete("/testsresult/:attemptID", verifyJwtToken, deleteTestResult);
 
-router.post("/submit-test", varifyJwtToken, submitTest);
+router.post("/submit-test", verifyJwtToken, submitTest);
 
 // Get all tests for an exam
 router.get("/:examID", getAllTestsByExam);
 
 // Get single test by title
-router.get("/:examID/:testID", varifyJwtToken, getTestById);
+router.get("/:examID/:testID", verifyJwtToken, getTestById);
 
 export { router as testRouter };

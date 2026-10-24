@@ -11,7 +11,7 @@ export const generateOtpmiddleware = async (req, res, next) => {
     if (!mobile && !email) {
       return res.status(400).json({
         success: false,
-        message: "pls provide email or mobile",
+        message: "Please provide email or mobile",
         data: {},
       });
     }
@@ -20,6 +20,7 @@ export const generateOtpmiddleware = async (req, res, next) => {
 
     if (email) {
       mailOtp = Math.floor(100000 + Math.random() * 900000);
+
       result = await sendOtpEmail({
         to: email,
         subject: "Verify Your TestPro Account",
@@ -63,7 +64,7 @@ export const generateOtpmiddleware = async (req, res, next) => {
 
       return res.status(201).json({
         success: true,
-        message: "OPT send succesfully",
+        message: "OTP sent successfully",
         data: { otpID },
       });
     } else
@@ -71,53 +72,101 @@ export const generateOtpmiddleware = async (req, res, next) => {
         .status(500)
         .json({ success: false, message: "OTP not generated" });
   } catch (error) {
-    console.error("Unhandled OTP error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 export async function otpVerification(req, res, next) {
   try {
-    const otp = req.body.otp;
-    const otpID = req.body.otpID;
-    const mobile = req.body?.mobile;
-    const email = req.body?.email;
+    const { otp, otpID, mobile, email } = req.body;
 
     if (!otp || (!mobile && !email)) {
       return res.status(400).json({
         success: false,
-        message: "pls provide mobile or email or otp",
+        message: "Please provide OTP and email or mobile.",
+        data: {},
+      });
+    }
+
+    // Require exactly one verification method.
+    if (email && mobile) {
+      return res.status(400).json({
+        success: false,
+        message: "Please verify using email or mobile, not both.",
+        data: {},
       });
     }
 
     let result;
 
     if (email) {
-      const check = await otpModel.findOne({ email }, { mailOtp: 1 });
-      if (check?.mailOtp == otp) {
-        result = { success: true, message: "OTP verified", data: {} };
-        await otpModel.findOneAndDelete({ email });
-      }
-    }
+      const check = await otpModel.findOne({ email });
 
-    if (mobile) {
-      if (!otpID) {
-        return res
-          .status(400)
-          .json({ success: false, message: "pls provide otpID", data: {} });
+      if (!check) {
+        return res.status(400).json({
+          success: false,
+          message: "OTP not found or already used. Please generate a new OTP.",
+          data: {},
+        });
       }
+
+      if (!check.expiresAt || check.expiresAt <= new Date()) {
+        await otpModel.findOneAndDelete({ email });
+
+        return res.status(410).json({
+          success: false,
+          message: "OTP expired. Please generate a new OTP.",
+          data: {},
+        });
+      }
+
+      if (String(check.mailOtp) !== String(otp)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid OTP. Please try again.",
+          data: {},
+        });
+      }
+
+      await otpModel.findOneAndDelete({ email });
+
+      result = {
+        success: true,
+        message: "OTP verified successfully.",
+        data: {},
+      };
+    } else if (mobile) {
+      if (!otpID) {
+        return res.status(400).json({
+          success: false,
+          message: "Please provide otpID.",
+          data: {},
+        });
+      }
+
       result = await VerifySmsOtp(mobile, otpID, otp);
+
+      if (!result?.success) {
+        return res.status(400).json({
+          success: false,
+          message: result?.message || "Invalid OTP. Please try again.",
+          data: {},
+        });
+      }
     }
 
     if (result?.success) {
       delete req.body.otp;
       delete req.body.otpID;
+
       return next();
-    } else {
-      return res
-        .status(500)
-        .json({ success: false, message: "otp not verified", data: {} });
     }
+
+    return res.status(400).json({
+      success: false,
+      message: result?.message || "OTP verification failed.",
+      data: {},
+    });
   } catch (error) {
     return next(error);
   }
