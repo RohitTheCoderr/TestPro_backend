@@ -38,7 +38,7 @@ export async function isUserExits(req, res, next) {
       if (exits)
         return res
           .status(400)
-          .json({ success: false, message: "user already Exits" });
+          .json({ success: false, message: "User already exists" });
 
       return next();
     } else if (req.originalUrl == "/api/user/auth/forget_password") {
@@ -46,7 +46,7 @@ export async function isUserExits(req, res, next) {
 
       return res
         .status(400)
-        .json({ success: false, message: "user not found" });
+        .json({ success: false, message: "User not found" });
     }
     // Fallback: never hang
     return res.status(400).json({ success: false, message: "Invalid request" });
@@ -232,7 +232,7 @@ export const loginUser = async (req, res, next) => {
     if (!user)
       return res
         .status(404)
-        .json({ success: false, message: "user not exits" });
+        .json({ success: false, message: "User not found" });
 
     const varifiedPass = await verifiedhashedpass(
       reqData?.password,
